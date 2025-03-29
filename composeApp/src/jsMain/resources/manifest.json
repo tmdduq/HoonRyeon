@@ -1,0 +1,21 @@
+{
+  "name": "Mr.고 훈련스쿨",
+  "short_name": "Mr.고 훈련스쿨",
+  "description": "현장부서에서 해야 할 훈련사항을 보기 쉽게!",
+  "start_url": "/compose",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0A154B",
+  "icons": [
+    {
+      "src": "composeResources/ggobong.composeapp.generated.resources/drawable/kcg-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "composeResources/ggobong.composeapp.generated.resources/drawable/kcg-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
