@@ -2,7 +2,6 @@ package org.kcg.gobongchan
 
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.CanvasBasedWindow
-import kotlinx.browser.window
 import org.jetbrains.skiko.wasm.onWasmReady
 
 

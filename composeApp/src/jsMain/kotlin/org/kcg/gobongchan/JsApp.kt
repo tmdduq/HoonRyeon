@@ -2,7 +2,6 @@ package org.kcg.gobongchan
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -29,16 +28,16 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import ggobong.composeapp.generated.resources.*
 import io.ktor.client.*
-
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import kotlinx.browser.window
 import org.jetbrains.compose.resources.*
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import org.w3c.dom.events.Event
+import org.w3c.dom.Navigator
+import org.w3c.workers.ServiceWorker
+import org.w3c.workers.ServiceWorkerRegistration
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
-import kotlin.js.Promise
 
 
 @Composable
@@ -47,11 +46,11 @@ fun GmarketFont() = FontFamily(
     Font(resource = Res.font.GmarketSansTTFMedium, weight = FontWeight.Medium),
     Font(resource = Res.font.GmarketSansTTFBold, weight = FontWeight.Bold)
 )
-val KCGDarkBlue = 0xFF0A154B
-val KCGBlue = 0xFF0B4094
-val KCGRed = 0xFFE00030
-val KCGYellow = 0xFFFECD17
-
+const val KCGDarkBlue = 0xFF0A154B
+const val KCGBlue = 0xFF0B4094
+const val KCGRed = 0xFFE00030
+const val KCGYellow = 0xFFFECD17
+const val csvName = "files/Gobong.csv"
 
 
 
@@ -72,7 +71,7 @@ data class MainData(
     )
 )
 
-val commonMap = mutableMapOf<String, String?>(
+val commonMap = mutableMapOf(
     "rstCode" to "1",
     "rstTitle" to null,
     "rstMessage" to "대충 이런 느낌?",
@@ -80,17 +79,16 @@ val commonMap = mutableMapOf<String, String?>(
     "fileName" to null
 )
 
-val csvName = "files/Gobong.csv"
-
-
-
-
-
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun JsApp() {
-    registerServiceWorker()
-    ignoreBackKey()
+    LaunchedEffect(Unit){
+        window.addEventListener("DOMContentLoaded", {
+            console.log("start LaunchedEffect")
+            registerServiceWorker{ sucess -> console.log("start LaunchedEffect: $sucess") }
+            ignoreBackKey()
+        })
+    }
 
     val rstMap = remember{ mutableStateOf(commonMap.toMutableMap()) }
 
@@ -128,12 +126,13 @@ fun JsApp() {
         }
     }
 
+
     val selectedCategoryMap = mutableMapOf<Int,String>()
     val categoryVerticalDepth = remember { mutableStateOf( 0 ) }
     val showPopup = remember { mutableStateOf(false) }
     var popupData = MainData()
 
-    MaterialTheme( ) {
+    MaterialTheme{
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -156,8 +155,9 @@ fun JsApp() {
                 )
 
                 Spacer(modifier = Modifier.padding(5.dp))
+                val mainDataList : List<MainData> = mainDataList
+                val dep0dataList = mainDataList.map { it.map["부서대분류"] as String}.toSet()
 
-                val dep0dataList = mainDataList.map { it.map["부서대분류"] }.toSet() as Set<String>
                 drawMenu(
                     nameList=dep0dataList,
                     visible = isBetween(categoryVerticalDepth.value,0,1),
@@ -175,7 +175,7 @@ fun JsApp() {
 
                 val dep1dataList = mainDataList
                     .filter{ it.map["부서대분류"]== selectedCategoryMap[0] }
-                    .map{ it.map["부서중분류"] }.toSet() as Set<String>
+                    .map{ it.map["부서중분류"] as String }.toSet()
                 drawMenu(
                     nameList=dep1dataList,
                     visible = isBetween(categoryVerticalDepth.value,1,2),
@@ -194,7 +194,7 @@ fun JsApp() {
                 val dep2dataList = mainDataList
                     .filter{ it.map["부서대분류"]== selectedCategoryMap[0] }
                     .filter{ it.map["부서중분류"]== selectedCategoryMap[1] }
-                    .map{ it.map["훈련분류"] }.toSet() as Set<String>
+                    .map{ it.map["훈련분류"] as String}.toSet()
                 drawMenu(
                     nameList=dep2dataList,
                     visible = isBetween(categoryVerticalDepth.value,2,3),
@@ -214,7 +214,7 @@ fun JsApp() {
                     .filter{ it.map["부서대분류"]== selectedCategoryMap[0] }
                     .filter{ it.map["부서중분류"]== selectedCategoryMap[1] }
                     .filter{ it.map["훈련분류"]== selectedCategoryMap[2] }
-                    .map{ it.map["분야"] }.toSet() as Set<String>
+                    .map{ it.map["분야"] as String}.toSet()
                 drawMenu(
                     nameList=dep3dataList,
                     visible = isBetween(categoryVerticalDepth.value,3,4),
@@ -236,7 +236,8 @@ fun JsApp() {
                     .filter{ it.map["부서중분류"]== selectedCategoryMap[1] }
                     .filter{ it.map["훈련분류"]== selectedCategoryMap[2] }
                     .filter{ it.map["분야"]== selectedCategoryMap[3] }
-                    .map{ it.map["훈련명"] }.toSet() as Set<String>
+                    .map{ it.map["훈련명"] as String}.toSet()
+
                 drawMenu(
                     nameList=dep4dataList,
                     visible = isBetween(categoryVerticalDepth.value,4,5),
@@ -256,7 +257,7 @@ fun JsApp() {
             }//columns
 
             //하단바 보이기숨기기
-            if(false)
+            if(true)
                 AnimatedVisibility(
                     visible = true,
                     modifier = Modifier
@@ -293,12 +294,12 @@ fun JsApp() {
             }
 
             AnimatedVisibility(showPopup.value, enter = EnterTransition.None, exit= fadeOut()){
-                ChatScreen(popupData, {showPopup.value=false} )
+                ChatScreen(popupData){ showPopup.value = false }
             }
 
 
             if(!rstMap.value["rstTitle"].isNullOrBlank()) {
-                makeDialog(rstMap.value, { rstMap.value = commonMap.toMutableMap() })
+                makeDialog(rstMap.value) { rstMap.value = commonMap.toMutableMap() }
             }
 
 
@@ -428,12 +429,21 @@ private fun Footer(
             Spacer(modifier = Modifier.weight(1f))
             Button(
                 modifier = Modifier.height(40.dp).width(100.dp),
-                onClick = save,
+                onClick = {
+                    requestPushNotificationPermission(
+                        title = "Test Notification",
+                        message = "Push Alarm Message",
+                        leftIcon = "composeResources/ggobong.composeapp.generated.resources/drawable/kcg-128x128.png",
+                        rightIcon = "composeResources/ggobong.composeapp.generated.resources/drawable/pallate.png"
+                    )
+                    //save()
+                },
                 colors = ButtonDefaults.buttonColors(Color(10,21,75)),
                 enabled = true,
             ) {
                 Text(text = "찾기", color = Color.White, fontWeight = FontWeight.Bold)
             }
+
         }
     }
 }

@@ -49,3 +49,19 @@ self.addEventListener('activate', (event) => {
     ); */
   console.log("Service Worker Activated");
 });
+
+
+
+// service-worker.js
+self.addEventListener('push', function(event) {
+console.log("push excute");
+    let options = {
+        body: event.data ? event.data.text() : 'no message',
+        icon: 'composeResources/ggobong.composeapp.generated.resources/drawable/kcg-128x128.png',
+        badge: 'composeResources/ggobong.composeapp.generated.resources/drawable/docs-64dp.svg',
+    };
+
+    event.waitUntil(
+        self.registration.showNotification('New Notification', options)
+    );
+});

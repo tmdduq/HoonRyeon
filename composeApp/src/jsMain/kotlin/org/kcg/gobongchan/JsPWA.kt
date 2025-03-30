@@ -18,22 +18,79 @@ import androidx.compose.ui.unit.sp
 import ggobong.composeapp.generated.resources.Res
 import ggobong.composeapp.generated.resources.kcg_128x128
 import kotlinx.browser.window
+import kotlinx.coroutines.await
+import kotlinx.coroutines.awaitAll
 import org.jetbrains.compose.resources.painterResource
 import org.w3c.dom.events.Event
+import org.w3c.notifications.NotificationOptions
+import org.w3c.workers.ServiceWorkerRegistration
 import kotlin.js.Promise
 
 
-fun registerServiceWorker(){
+fun registerServiceWorker(callback: (Boolean) -> Unit){
     // Service Worker 등록
-    window.addEventListener("load", {
-        window.navigator.serviceWorker.register("/service-worker.js").then(
-            { registration -> println("Service Worker 등록 성공: $registration") },
-            { error -> println("Service Worker 등록 실패: $error") }
-        )
-    })
-    // + Mobile
-//    registerServiceWorkerForMobile()
+    console.log("IN : registerServiceWorker()")
+
+    // 서비스 워커가 지원되지 않으면 즉시 false 반환
+    if (!window.navigator.serviceWorker.asDynamic() as Boolean) {
+        console.log("[Error] Service Worker is not supported in this browser.")
+        callback(false)
+        return
+    }
+
+//    window.addEventListener("load", {
+    window.navigator.serviceWorker.register("service-worker.js")
+        .then(
+            { registration -> {
+                console.log("[regi ok] Service Worker: $registration.scope")
+                callback(true)
+                }
+            },
+            { error -> {
+                console.log("[regi fail] Service Worker : $error")
+                callback(false)
+                }
+            }
+        ).then {
+            console.log("[regi then] Service Worker : $it")
+        }
+//    })
+    // 혹시 등록이 지연되거나 실패할 경우 대비하여 일정 시간이 지나도 `callback(false)` 호출
+    window.setTimeout({
+        console.log("[timeout] Service Worker registration timed out.")
+        callback(false)
+    }, 5000) // 5초 후에도 `then`이 실행되지 않으면 실패 처리
 }
+
+fun requestPushNotificationPermission(title: String, message: String, leftIcon:String, rightIcon:String) {
+    console.log("IN : requestPushNotificationPermission()")
+    Notification.requestPermission { permission ->
+        if (permission == "granted") {
+            console.log("[Permission ok]")
+            showNotification(title, message, leftIcon,rightIcon)
+        } else {
+            console.log("[Permission denied] : $permission")
+        }
+    }
+}
+
+private fun showNotification(title: String, message: String, leftIcon:String, rightIcon:String) {
+    console.log("IN : showNotification()")
+
+    window.navigator.serviceWorker.ready.then({ registration ->
+        console.log("[ready- ok] showNotification")
+        val notificationOptions = NotificationOptions().apply {
+            body = message
+            icon = leftIcon
+            badge = rightIcon
+        }
+        registration.showNotification(title, notificationOptions)
+        console.log("[push- ok] showNotification")
+    }).catch({ error ->
+        console.log("[ready- fail] : $error")
+    })
+}
+
 
 
 fun ignoreBackKey(){
@@ -93,5 +150,28 @@ fun InstallButton() {
             Text("App 설치", fontFamily = GmarketFont(), fontSize = 15.sp, color = Color.White,
                 modifier= Modifier.align(Alignment.CenterVertically).padding(end = 5.dp))
         }
+    }
+}
+
+@JsName("Notification")
+external class Notification(
+    title: String,
+    options: dynamic
+) {
+    companion object {
+        fun requestPermission(callback: (String) -> Unit): Unit
+    }
+}
+
+external class Options {
+    var body: String?
+    var icon: String?
+    var badge: String?
+}
+
+@JsName("registration")
+external  class registration(){
+    companion object{
+        fun showNotification(s:String, options:dynamic)
     }
 }
