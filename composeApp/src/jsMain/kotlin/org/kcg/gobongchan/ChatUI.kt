@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,11 +23,14 @@ import androidx.compose.ui.unit.sp
 import ggobong.composeapp.generated.resources.*
 import ggobong.composeapp.generated.resources.Res
 import kotlinx.browser.window
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.InternalResourceApi
 import org.jetbrains.compose.resources.painterResource
 import org.w3c.dom.Window
 import kotlin.js.Date
+import kotlin.random.Random
 
 data class Chat(
     val message: String,
@@ -48,15 +52,21 @@ val chats = mutableStateListOf<Chat>(
     Chat("교육에 대해 상세히 알려줄게!", getTime(), false),
 )
 
-fun chatsInit(data: Map<String, Any>){
-    chats.add(Chat("<${data["훈련명"]}>에 대해 알려주세요!",getTime(), true))
+fun chatsInit(data: Map<String, String>){
 
-    data.filter { it.key !in listOf("연번", "부서대분류", "부서중분류", "분야", "훈련분류", "첨부제목", "첨부내용", "파일명 또는 링크")  }
+    for(s in cNameList.subList(0, LabelSize+1).reversed())
+        if(!data[s].isNullOrEmpty()){
+            chats.add(Chat("<${data[s]}>에 대해 알려주세요!",getTime(), true))
+            break
+        }
+
+    data.filter { it.key !in cNameList.subList(0, LabelSize+1)  }
+        .filter { it.key !in listOf("첨부제목", "첨부내용", "파일명 또는 링크")  }
         .forEach { (k,v) ->
-            if(!v.toString().isNullOrEmpty())
+            if(v.isNotEmpty())
                 chats.add(Chat("$k : $v",getTime(), false))
     }
-    if(data["첨부제목"] != null){
+    if("${data["첨부제목"]}".isNotEmpty()){
         val fName = data["파일명 또는 링크"] as String
         val linkData = ChatLinkData(extNameIcon(fName),
             "${data["첨부제목"]}",
@@ -64,26 +74,43 @@ fun chatsInit(data: Map<String, Any>){
             "${data["파일명 또는 링크"]}")
         chats.add(Chat("첨부파일을 참고하세요.",getTime(), false, linkData))
     }
-    val t = ChatLinkData(extNameIcon("sample.pdf"), "샘플입니다", "훈련교범입니다.\n클릭하면 볼 수 있어요.","https://youtube.com")
-    chats.add(Chat("훈련교범을 참고하세요.",getTime(), false, t))
+    when( Random.nextInt(4)){
+        0 ->{
+            val t = ChatLinkData(extNameIcon("sample.pdf"), "샘플제목입니다", "샘플내용입니다.\n클릭하면 볼 수 있어요.","https://youtube.com")
+            chats.add(Chat("훈련교범을 참고하세요.",getTime(), false, t))
+        }
+        1->{
+            val t = ChatLinkData(extNameIcon("sample.zip"), "샘플제목입니다", "참고파일입니다.\n클릭하면 볼 수 있어요.","https://youtube.com")
+            chats.add(Chat("첨부파일을 참고하세요.",getTime(), false, t))
+        }
+        2->{
+            val t = ChatLinkData(extNameIcon("http://sample.pdf"), "샘플제목입니다", "관련 링크입니다.\n클릭하면 볼 수 있어요.","https://youtube.com")
+            chats.add(Chat("링크를 참고하세요.",getTime(), false, t))
+        }
+        3->{
+            val t = ChatLinkData(extNameIcon("sample.mp4"), "샘플제목입니다", "훈련영상입니다.\n클릭하면 볼 수 있어요.","https://youtube.com")
+            chats.add(Chat("동영상을 참고하세요.",getTime(), false, t))
+        }
+    }
+
+
 
 
 }
 
 const val username = "Mr.고 선생님"
+const val phoneNumber = "063-928-2318"
 const val isOnline = false
 
 @OptIn(InternalResourceApi::class)
 @Composable
-fun ChatScreen(popupData : MainData, onBack:() -> Unit) {
+fun ChatScreen(popupData : MainData, onBack:() -> Unit, toPhone: (number: String) -> Unit) {
     LaunchedEffect(popupData) {
         chatsInit(popupData.map)
     }
 
-
-
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxWidth().fillMaxHeight(0.9f)
             .padding(40.dp)
             .background(Color.Black.copy(0.5f))
     ) {
@@ -99,7 +126,9 @@ fun ChatScreen(popupData : MainData, onBack:() -> Unit) {
                 onBack = onBack,
             )
             ChatSection(Modifier.weight(1f))
-            MessageSection()
+            MessageSection(
+                toPhone = {number-> toPhone(number) }
+            )
         }
     }
 }
@@ -112,9 +141,7 @@ fun TopBarSection(
     onBack: () -> Unit
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(60.dp),
+        modifier = Modifier.fillMaxWidth().height(60.dp),
         backgroundColor = Color(0xFFFAFAFA),
         elevation = 4.dp
     ) {
@@ -128,11 +155,10 @@ fun TopBarSection(
                 onClick = onBack
             ){
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back"
                 )
             }
-
 
             Spacer(modifier = Modifier.width(8.dp))
 
@@ -146,10 +172,10 @@ fun TopBarSection(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            Column {
+            Column(Modifier.clickable {  window.location.href = "tel:$phoneNumber" }) {
                 Text(text = username, fontWeight = FontWeight.SemiBold, fontFamily = GmarketFont())
                 Text(
-                    text = if (isOnline) "Online" else "문의: 063-928-2318",
+                    text = if (isOnline) "Online" else "문의: $phoneNumber",
                     fontSize = 12.sp, fontFamily = GmarketFont()
                 )
             }
@@ -162,6 +188,8 @@ fun ChatSection(
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
+    if(chats.size>30)
+        chats.removeRange(0, chats.lastIndex-15)
     LaunchedEffect(chats.size) {
         listState.animateScrollToItem(chats.size - 1)
     }
@@ -170,14 +198,12 @@ fun ChatSection(
         state = listState
     ) {
         items(chats) { chat ->
-            if(chat.time.length>1)
-                MessageItem(
-                    chat.message,
-                    chat.time,
-                    chat.isOutgoing,
-                    chat.linkData
-                )
-
+            MessageItem(
+                chat.message,
+                chat.time,
+                chat.isOutgoing,
+                chat.linkData
+            )
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
@@ -185,17 +211,17 @@ fun ChatSection(
 
 fun getTime() : String{
     val now = Date(Date.now())
-    var hours = now.getHours()
+    val hours = now.getHours() % 12
     val minutes = "${now.getMinutes()}".padStart(2,'0')
     val second = "${now.getSeconds()}".padStart(2,'0')
     val ampm = if(hours>=12) "PM" else "AM"
-    hours = hours % 12
     val hour = if(hours==0) "12" else "$hours".padStart(2,'0')
     return "$hour:$minutes $ampm"
 }
 
 @Composable
-fun MessageSection() {
+fun MessageSection(toPhone:(number:String)-> Unit) {
+    val coroutineScope = rememberCoroutineScope()
     Card(
         modifier = Modifier
             .fillMaxWidth(),
@@ -219,8 +245,13 @@ fun MessageSection() {
                     tint = Color.Unspecified,
                     modifier = Modifier.size(50.dp).aspectRatio(1f).clip(CircleShape)
                         .clickable {
-                        chats.add(Chat(message.value, getTime(), true))
-                        message.value = ""
+                            chats.add(Chat(message.value, getTime(), true))
+                            message.value = ""
+                            coroutineScope.launch{
+                                delay(1000)
+                                chats.add(Chat("전화주세요. 이 메시지는 확인하지 않아요.", getTime(), false))
+                                toPhone(phoneNumber)
+                            }
                     }
                 )
 

@@ -51,24 +51,13 @@ const val KCGBlue = 0xFF0B4094
 const val KCGRed = 0xFFE00030
 const val KCGYellow = 0xFFFECD17
 const val csvName = "files/Gobong.csv"
+val LabelSize = 7
 
 
+val cNameList = mutableListOf<String>()
 
-//연번,부서대분류,부서중분류,훈련분류,분야,훈련명,시간1,시간2
 data class MainData(
-    val map: Map<String, Any> = mapOf(
-        "연번" to 0,
-        "부서대분류" to "",
-        "부서중분류" to "",
-        "훈련분류" to "",
-        "분야" to "",
-        "훈련명" to "",
-        "훈련횟수" to "",
-        "훈련시간" to "",
-        "첨부제목" to "",
-        "첨부내용" to "",
-        "파일명 또는 링크" to "",
-    )
+    val map: Map<String, String> = mutableMapOf()
 )
 
 val commonMap = mutableMapOf(
@@ -79,58 +68,24 @@ val commonMap = mutableMapOf(
     "fileName" to null
 )
 
-@OptIn(ExperimentalResourceApi::class)
+
+
 @Composable
 fun JsApp() {
     LaunchedEffect(Unit){
         window.addEventListener("DOMContentLoaded", {
             console.log("start LaunchedEffect")
-            registerServiceWorker{ sucess -> console.log("start LaunchedEffect: $sucess") }
+            registerServiceWorker{ success -> console.log("start LaunchedEffect: $success") }
             ignoreBackKey()
         })
     }
-
     val rstMap = remember{ mutableStateOf(commonMap.toMutableMap()) }
-
-    val mainDataList by produceState(emptyList()){
-        value = HttpClient().use { client ->
-            val s = client.get(Res.getUri(csvName)).bodyAsText()
-
-            suspendCoroutine { continuation ->
-                val config = js("{}") // JavaScript 객체 생성
-                config.header = true
-                config.dynamicTyping = true
-                config.delimiter = ","
-                config.complete = { result: ParseResult<dynamic> ->
-                    //println("파싱된 데이터 구조: ${JSON.stringify(result.data)}")
-                    val parsedList = result.data
-                        .filter { it["연번"]!=null }
-                        .map {
-                        MainData(
-                            mapOf(
-                                "연번" to (it["연번"]?.toString()?.toIntOrNull() ?: -1),
-                                "부서대분류" to (it["부서대분류"]?.toString() ?: ""),
-                                "부서중분류" to (it["부서중분류"]?.toString() ?: ""),
-                                "훈련분류" to (it["훈련분류"]?.toString() ?: ""),
-                                "분야" to (it["분야"]?.toString() ?: ""),
-                                "훈련명" to (it["훈련명"]?.toString() ?: ""),
-                                "훈련횟수" to (it["시간1"]?.toString() ?: ""),
-                                "훈련시간" to (it["시간2"]?.toString() ?: "")
-                            )
-                        )
-                    }
-                    continuation.resume(parsedList)
-                }
-                Papa.parse(s, config)
-            }
-        }
-    }
-
-
+    val mainDataList by loadCSV()
     val selectedCategoryMap = mutableMapOf<Int,String>()
     val categoryVerticalDepth = remember { mutableStateOf( 0 ) }
     val showPopup = remember { mutableStateOf(false) }
     var popupData = MainData()
+    val phoneNumber = remember { mutableStateOf("") }
 
     MaterialTheme{
         Box(
@@ -156,145 +111,104 @@ fun JsApp() {
 
                 Spacer(modifier = Modifier.padding(5.dp))
                 val mainDataList : List<MainData> = mainDataList
-                val dep0dataList = mainDataList.map { it.map["부서대분류"] as String}.toSet()
 
-                drawMenu(
-                    nameList=dep0dataList,
-                    visible = isBetween(categoryVerticalDepth.value,0,1),
-                    selectedCategoryName = selectedCategoryMap[0],
-                    color = KCGDarkBlue,
-                    onClick = { s ->
-                        if(selectedCategoryMap[0]!=s){
-                            categoryVerticalDepth.value = 0
-                            categoryVerticalDepth.value = 1
-                        }
-                        else if(categoryVerticalDepth.value != 0) categoryVerticalDepth.value = 0
-                        else categoryVerticalDepth.value = 1
-                        selectedCategoryMap[0] = s
-                    })
 
-                val dep1dataList = mainDataList
-                    .filter{ it.map["부서대분류"]== selectedCategoryMap[0] }
-                    .map{ it.map["부서중분류"] as String }.toSet()
-                drawMenu(
-                    nameList=dep1dataList,
-                    visible = isBetween(categoryVerticalDepth.value,1,2),
-                    selectedCategoryName = selectedCategoryMap[1],
-                    color = KCGBlue,
-                    onClick = { s ->
-                        if(selectedCategoryMap[1]!=s){
-                            categoryVerticalDepth.value = 1
-                            categoryVerticalDepth.value = 2
-                        }
-                        else if(categoryVerticalDepth.value != 1) categoryVerticalDepth.value = 1
-                        else categoryVerticalDepth.value = 2
-                        selectedCategoryMap[1] = if( selectedCategoryMap[1] != s) s else ""
-                    })
+                for(i in 0 until LabelSize){
+                    var depDataList = mainDataList
+                    if(i>0)
+                        for(j in 0 until i)
+                            depDataList = depDataList.filter {it.map[cNameList[j+1]]  == selectedCategoryMap[j] }
+                    val d = depDataList.map{it.map[cNameList[i+1]]?:""}.filter{ it!="" }.toSet()
 
-                val dep2dataList = mainDataList
-                    .filter{ it.map["부서대분류"]== selectedCategoryMap[0] }
-                    .filter{ it.map["부서중분류"]== selectedCategoryMap[1] }
-                    .map{ it.map["훈련분류"] as String}.toSet()
-                drawMenu(
-                    nameList=dep2dataList,
-                    visible = isBetween(categoryVerticalDepth.value,2,3),
-                    selectedCategoryName = selectedCategoryMap[2],
-                    onClick = { s ->
-                        if(selectedCategoryMap[2]!=s){
-                            categoryVerticalDepth.value = 2
-                            categoryVerticalDepth.value = 3
-                        }
-                        else if(categoryVerticalDepth.value != 2) categoryVerticalDepth.value = 2
-                        else categoryVerticalDepth.value = 3
-                        selectedCategoryMap[2] = if( selectedCategoryMap[2] != s) s else ""
-                    })
 
-                val dep3dataList = mainDataList
-                    .asSequence()
-                    .filter{ it.map["부서대분류"]== selectedCategoryMap[0] }
-                    .filter{ it.map["부서중분류"]== selectedCategoryMap[1] }
-                    .filter{ it.map["훈련분류"]== selectedCategoryMap[2] }
-                    .map{ it.map["분야"] as String}.toSet()
-                drawMenu(
-                    nameList=dep3dataList,
-                    visible = isBetween(categoryVerticalDepth.value,3,4),
-                    selectedCategoryName = selectedCategoryMap[3],
-                    color = KCGDarkBlue,
-                    onClick = { s ->
-                        if(selectedCategoryMap[3]!=s){
-                            categoryVerticalDepth.value = 3
-                            categoryVerticalDepth.value = 4
-                        }
-                        else if(categoryVerticalDepth.value != 3) categoryVerticalDepth.value = 3
-                        else categoryVerticalDepth.value = 4
-                        selectedCategoryMap[3] = if( selectedCategoryMap[3] != s) s else ""
-                    })
+                    drawMenu(
+                        nameList= d,
+                        visible = isBetween(categoryVerticalDepth.value,i,i+1),
+                        selectedCategoryName = selectedCategoryMap[i],
+                        color = listOf(KCGDarkBlue, KCGBlue, 0xffff9040L, KCGYellow)[i%4],
+                        onClick = { s ->
+                            if(i < LabelSize-1) {
+                                //console.log("depth:${categoryVerticalDepth.value},\tbeforeNode(map[i]):${selectedCategoryMap[i]},\tclickNode=$s")
+                                val predNextNode = depDataList.filter {it.map[cNameList[i+1]]  == s }.map{it.map[cNameList[i+2]]?:""}.filter{ it!="" }.toSet()
+                                when{
+                                    predNextNode.isEmpty() && i!=0->{
+                                        console.log("last node")
+                                        popupData = depDataList.filter {it.map[cNameList[i+1]]  == s }.firstOrNull() ?: MainData()
+                                        showPopup.value = true
 
-                val dep4dataList = mainDataList
-                    .asSequence()
-                    .filter{ it.map["부서대분류"]== selectedCategoryMap[0] }
-                    .filter{ it.map["부서중분류"]== selectedCategoryMap[1] }
-                    .filter{ it.map["훈련분류"]== selectedCategoryMap[2] }
-                    .filter{ it.map["분야"]== selectedCategoryMap[3] }
-                    .map{ it.map["훈련명"] as String}.toSet()
+                                        categoryVerticalDepth.value = i
+                                        selectedCategoryMap[i] = if (selectedCategoryMap[i] != s) s else ""
+                                    }
+                                    !selectedCategoryMap[i].isNullOrEmpty() &&selectedCategoryMap[i] != s->{
+                                        console.log("eq depth / diff node")
+                                        categoryVerticalDepth.value = i
+                                        categoryVerticalDepth.value = i + 1
+                                    }
+                                    categoryVerticalDepth.value != i ->{
+                                        console.log("eq node")
+                                        categoryVerticalDepth.value = i
+                                    }
+                                    else->{
+                                        console.log("diff depth / diff node")
+                                        categoryVerticalDepth.value = i + 1
+                                    }
+                                }
+                                selectedCategoryMap[i] = if (selectedCategoryMap[i] != s) s else ""
 
-                drawMenu(
-                    nameList=dep4dataList,
-                    visible = isBetween(categoryVerticalDepth.value,4,5),
-                    selectedCategoryName = selectedCategoryMap[4],
-                    color = KCGBlue,
-                    onClick = { s ->
-                        popupData = mainDataList
-                            .asSequence()
-                            .filter{ it.map["부서대분류"]== selectedCategoryMap[0] }
-                            .filter{ it.map["부서중분류"]== selectedCategoryMap[1] }
-                            .filter{ it.map["훈련분류"]== selectedCategoryMap[2] }
-                            .filter{ it.map["분야"]== selectedCategoryMap[3] }
-                            .filter{ it.map["훈련명"]== s }
-                            .firstOrNull() ?: throw IllegalArgumentException("조건에 맞는 데이터가 없습니다.")
-                        showPopup.value = true
-                    })
+                            }
+                            else{
+                                console.log("last depth")
+                                depDataList = depDataList.filter {it.map[cNameList[i]]  == selectedCategoryMap[i-1] }
+                                popupData = depDataList.firstOrNull { it.map[cNameList[i + 1]] == s } ?: MainData()
+                                showPopup.value = true
+                            }
+                        })
+                }
             }//columns
 
+            //팝업 채팅창
+            AnimatedVisibility(showPopup.value, enter = EnterTransition.None, exit= fadeOut()){
+                ChatScreen(
+                    popupData = popupData,
+                    onBack = {
+                        showPopup.value = false
+                        phoneNumber.value =""
+                    },
+                    toPhone = { phoneNumber.value = it }
+                )
+            }
+
             //하단바 보이기숨기기
-            if(true)
-                AnimatedVisibility(
-                    visible = true,
-                    modifier = Modifier
-                        .background(Color(221, 235, 247) )
-                        .wrapContentHeight()
-                        .fillMaxWidth().align(Alignment.BottomCenter),
-                ) {
-                    //하단바
-                    Footer(
-                        modifier = Modifier
-                            .wrapContentHeight()
-                            .fillMaxWidth()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color(238, 249, 252),  // 하단
-                                        Color(255, 255, 255),  // 상단 색상
-                                    )
+            AnimatedVisibility(
+                visible = phoneNumber.value.isNotEmpty(),
+                modifier = Modifier
+                    .background(Color(221, 235, 247) )
+                    .wrapContentHeight()
+                    .fillMaxWidth().align(Alignment.BottomCenter),
+            ) {
+                //하단바
+                Footer(
+                    modifier = Modifier.wrapContentHeight().fillMaxWidth()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(238, 249, 252),  // 하단
+                                    Color(255, 255, 255),  // 상단 색상
                                 )
                             )
-                            //Color(221, 235, 247) )//.background(Color.White)
-                            .align(Alignment.BottomCenter),
-                        save = {
-                            rstMap.value = commonMap.toMutableMap().apply { this["rstTitle"] = "이렇게이렇게..." }
-                        }
-                    ) // end CalendarBottom
-                }
+                        ).align(Alignment.BottomCenter),
+                    save = {
+                        rstMap.value = commonMap.toMutableMap().apply { this["rstTitle"] = "이렇게이렇게..." }
+                    },
+                    phoneNumber = phoneNumber.value
+                ) // end CalendarBottom
+            }
 
             //다운로드 버튼
             Box(
                 modifier = Modifier.fillMaxWidth(1f).height(40.dp),
                 contentAlignment = Alignment.CenterEnd) {
                 InstallButton()
-            }
-
-            AnimatedVisibility(showPopup.value, enter = EnterTransition.None, exit= fadeOut()){
-                ChatScreen(popupData){ showPopup.value = false }
             }
 
 
@@ -304,6 +218,39 @@ fun JsApp() {
 
 
         } // box
+    }
+}
+
+@OptIn(ExperimentalResourceApi::class)
+@Composable
+fun loadCSV(): State<List<MainData>> {
+    return produceState(emptyList()){
+        value = HttpClient().use { client ->
+            val s = client.get(Res.getUri(csvName)).bodyAsText()
+
+            suspendCoroutine { continuation ->
+                val config = js("{} ") // JavaScript 객체 생성
+                config.header = true
+                config.dynamicTyping = true
+                config.skipEmptyLines = true
+                config.delimiter = ","
+                config.complete = { result: ParseResult<dynamic> ->
+                    //println("파싱된 데이터 구조: ${JSON.stringify(result.data)}")
+                    val fields = result.meta.fields ?: emptyArray()
+                    cNameList.addAll(fields)
+                    console.log("header :"+fields.joinToString(","))
+
+                    val parsedList = result.data
+                        .map { csvLineMap->
+                            val map = cNameList.associateWith { cName ->csvLineMap[cName]?.toString()?:"" }
+                            //map.keys.forEach {k-> console.log("$k : ${map[k]}") }
+                            MainData(map=map)
+                        }
+                    continuation.resume(parsedList)
+                }
+                Papa.parse(s, config)
+            }
+        }
     }
 }
 
@@ -408,6 +355,7 @@ fun mainWindowBox(text:String, backgroundColor:Long, onClick:()->Unit, modifier:
 private fun Footer(
     modifier: Modifier = Modifier,
     save: () -> Unit,
+    phoneNumber:String
 ) {
     Column(modifier.fillMaxWidth()) {
         //footer 경계선
@@ -422,7 +370,7 @@ private fun Footer(
         ) {
             //footer Text
             Text(
-                text = "선택이 완료되었어요. \n필요한 교육을 확인해볼까요?",
+                text = "더 궁금한게 있으신가요? \n사무실로 전화해보세요!",
                 fontWeight = FontWeight.Bold, fontFamily = GmarketFont()
             )
 
@@ -430,18 +378,12 @@ private fun Footer(
             Button(
                 modifier = Modifier.height(40.dp).width(100.dp),
                 onClick = {
-                    requestPushNotificationPermission(
-                        title = "Test Notification",
-                        message = "Push Alarm Message",
-                        leftIcon = "composeResources/ggobong.composeapp.generated.resources/drawable/kcg-128x128.png",
-                        rightIcon = "composeResources/ggobong.composeapp.generated.resources/drawable/pallate.png"
-                    )
-                    //save()
+                    window.location.href = "tel:$phoneNumber"
                 },
                 colors = ButtonDefaults.buttonColors(Color(10,21,75)),
                 enabled = true,
             ) {
-                Text(text = "찾기", color = Color.White, fontWeight = FontWeight.Bold)
+                Text(text = "전화", color = Color.White, fontWeight = FontWeight.Bold)
             }
 
         }
