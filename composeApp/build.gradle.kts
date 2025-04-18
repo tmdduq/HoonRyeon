@@ -28,18 +28,27 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
+
+            //Image Load
+            implementation(libs.coil.compose.core)
+            implementation(libs.coil.compose)
+            implementation(libs.coil.mp)
+            implementation(libs.coil.network.ktor)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
+            // https://mvnrepository.com/artifact/com.jsoizo/kotlin-csv
+            implementation("com.jsoizo:kotlin-csv:1.10.0")
         }
 
         jsMain.dependencies {
-            // https://mvnrepository.com/artifact/io.ktor/ktor-client-core
-            implementation("io.ktor:ktor-client-core:3.1.1")
-            implementation("io.ktor:ktor-client-cio:3.1.1")
-            implementation ("io.ktor:ktor-client-json:3.1.1")
-            implementation("io.ktor:ktor-serialization-kotlinx-json:3.1.1")
+            // 인터넷 접속
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.cio)
+            implementation(libs.ktor.client.json)
+            implementation(libs.ktor.serialization.kotlinx.json)
+
 
             // build.gradle.kts에 외부 라이브러리 추가
             // 안되면 수동으로 터미널에 >npm install papaparse

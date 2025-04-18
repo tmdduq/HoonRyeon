@@ -18,12 +18,9 @@ import androidx.compose.ui.unit.sp
 import ggobong.composeapp.generated.resources.Res
 import ggobong.composeapp.generated.resources.kcg_128x128
 import kotlinx.browser.window
-import kotlinx.coroutines.await
-import kotlinx.coroutines.awaitAll
 import org.jetbrains.compose.resources.painterResource
 import org.w3c.dom.events.Event
 import org.w3c.notifications.NotificationOptions
-import org.w3c.workers.ServiceWorkerRegistration
 import kotlin.js.Promise
 
 
@@ -103,7 +100,7 @@ fun ignoreBackKey(){
 }
 
 @Composable
-fun InstallButton() {
+actual fun InstallButton() {
     var deferredPrompt by remember { mutableStateOf<dynamic>(null) }
     val isReady = remember { mutableStateOf(false) }
 
@@ -170,8 +167,9 @@ external class Options {
 }
 
 @JsName("registration")
-external  class registration(){
+external class registration(){
     companion object{
         fun showNotification(s:String, options:dynamic)
     }
 }
+
