@@ -3,16 +3,18 @@ package org.kcg.gobongchan
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.res.loadImageBitmap
 import com.github.doyaaaaaken.kotlincsv.client.CsvReader
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.jetbrains.compose.resources.ExperimentalResourceApi
+import org.jetbrains.compose.resources.decodeToImageBitmap
 import java.awt.Desktop
 import java.io.File
 import java.io.InputStream
 import java.net.URI
 import java.net.URL
+import java.net.URLEncoder
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -38,17 +40,22 @@ actual fun runCall(phoneNumber:String) {
 actual fun openLinkData(link: String) {
     val url = when {
         link.startsWith("http") -> link
-        else -> "http://osy.kr/compose/$datapath/files/${link}"
+        else -> "http://osy.kr/compose/$datapath/files/" +
+            URLEncoder.encode(link, Charsets.UTF_8.name()).replace("+", "%20")
     }
     openUrl(url)
 }
+@OptIn(ExperimentalResourceApi::class)
 @Composable
 actual fun WebImage(url:String){
     var image by remember { mutableStateOf<ImageBitmap?>(null) }
     LaunchedEffect(url){
         try{
-            val stream: InputStream = URL(url).openStream()
-            image = loadImageBitmap(stream)
+            val bitmap = withContext(Dispatchers.IO){
+                val stream: InputStream = URL(url).openStream()
+                stream.readAllBytes().decodeToImageBitmap()
+            }
+            image = bitmap
         }catch(e:Exception){e.printStackTrace()}
     }
     image?.let {

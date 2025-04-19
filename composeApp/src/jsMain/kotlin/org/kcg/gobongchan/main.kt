@@ -10,7 +10,7 @@ fun main(){
     onWasmReady{
         CanvasBasedWindow{
             Greeting().greet()
-            JsApp()
+            App()
         }
     }
 }

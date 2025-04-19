@@ -21,7 +21,7 @@ actual fun getTime() : String{
     val now = Date(Date.now())
     val hours = now.getHours() % 12
     val minutes = "${now.getMinutes()}".padStart(2,'0')
-    val second = "${now.getSeconds()}".padStart(2,'0')
+    //val second = "${now.getSeconds()}".padStart(2,'0')
     val ampm = if(hours>=12) "PM" else "AM"
     val hour = if(hours==0) "12" else "$hours".padStart(2,'0')
     return "$hour:$minutes $ampm"
@@ -95,7 +95,7 @@ actual fun addPWA() {
 actual fun WebImage(url: String) {
     AsyncImage(
         model = url,
-        contentScale = ContentScale.FillWidth,
+        contentScale = ContentScale.Fit,
         contentDescription = "maps!",
         modifier = Modifier.fillMaxSize()
     )

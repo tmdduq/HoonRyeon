@@ -16,7 +16,6 @@ const val datapath = "composeResources/ggobong.composeapp.generated.resources"
 const val csvName = "files/Gobong.csv"
 const val username = "Mr.고 선생님"
 const val phoneNumber = "063-000-0000"
-const val isOnline = false
 
 val LabelSize = 7
 val cNameList = mutableListOf<String>()
@@ -26,8 +25,8 @@ data class MainData(
 )
 
 data class Chat(
-    val message: String,
-    val time: String,
+    val subtitle: String,
+    val detail: String,
     val isOutgoing: Boolean,
     val linkData :ChatLinkData? = null,
     val xyData: Pair<Double, Double>?=  null
@@ -141,6 +140,22 @@ fun WGS84toTM5179(lon: Double, lat: Double): Pair<Double, Double> {
     return x to y
 }
 
+fun attachJosa(word: String, josaType: String): String {
+    val lastChar = word.lastOrNull() ?: return word
+
+    // 한글 유니코드 범위: 0xAC00 ~ 0xD7A3
+    val baseCode = lastChar.code - 0xAC00
+    val hasBatchim = baseCode in 0..11171 && baseCode % 28 != 0
+
+    val josa = when (josaType) {
+        "은는" -> if (hasBatchim) "은" else "는"
+        "이가" -> if (hasBatchim) "이" else "가"
+        "을를" -> if (hasBatchim) "을" else "를"
+        else -> ""
+    }
+
+    return word + josa
+}
 
 expect fun getTime() : String
 expect fun println(s:String)
