@@ -16,6 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ggobong.composeapp.generated.resources.*
@@ -24,9 +27,9 @@ import kotlin.collections.set
 
 
 @Composable
-fun App() {
+fun App(windowSize :  Pair<Dp, Dp>) {
     val footerHeight = 70.dp
-    val rstMap = remember{ mutableStateOf(commonMap.toMutableMap()) }
+    val isVertical = windowSize.first < windowSize.second
     val mainDataList by loadCSV()
     val selectedCategoryMap = mutableMapOf<Int,String>()
     val categoryVerticalDepth = remember { mutableStateOf( 0 ) }
@@ -143,9 +146,7 @@ fun App() {
                 //하단바
                 Footer(
                     modifier = Modifier.height(footerHeight).fillMaxWidth(),
-                    onCall = {
-                        rstMap.value = commonMap.toMutableMap().apply { this["rstTitle"] = "이렇게이렇게..." }
-                    },
+                    onCall = {},
                 ) // end
             }
 
@@ -156,20 +157,26 @@ fun App() {
                 InstallButton()
             }
 
-            if(!rstMap.value["rstTitle"].isNullOrBlank()) {
-                makeDialog(rstMap.value) { rstMap.value = commonMap.toMutableMap() }
-            }
-
             AnimatedVisibility(categoryVerticalDepth.value<1,
                 enter = fadeIn(animationSpec = tween(durationMillis = 1000)),
                 exit= fadeOut(animationSpec = tween(durationMillis = 1000))){
-                MainItemView({
-                    pushHistoryState("1")
-                    categoryVerticalDepth.value = 1
-                    selectedCategoryMap[0] = it
-                    showMain.value = false
-                    println("showMain ${showMain.value}")
-                })
+
+                if(isVertical)
+                    MainItemView({
+                        pushHistoryState("1")
+                        categoryVerticalDepth.value = 1
+                        selectedCategoryMap[0] = it
+                        showMain.value = false
+                        println("showMain ${showMain.value}")
+                    })
+                else
+                    MainItemViewHori({
+                        pushHistoryState("1")
+                        categoryVerticalDepth.value = 1
+                        selectedCategoryMap[0] = it
+                        showMain.value = false
+                        println("showMain ${showMain.value}")
+                    })
             }
 
 
@@ -190,10 +197,10 @@ fun MainItemView(onClick: (s:String) -> Unit){
         Text(
             modifier = Modifier.padding(top = 50.dp, bottom = 10.dp),
             text = "무엇을 찾나요?", color = Color.White,
-            fontFamily = GmarketFont(),
-            fontSize = 40.sp
+            overflow = TextOverflow.Ellipsis, maxLines = 1,
+            fontFamily = GmarketFont(), fontSize = 40.sp
         )
-        Row(modifier = Modifier.fillMaxWidth(),
+        Row(modifier = Modifier.fillMaxWidth(),//.height(IntrinsicSize.Min),
             horizontalArrangement = Arrangement.Center) {
             MainMenuBox(
                 Modifier.weight(1f),
@@ -245,7 +252,75 @@ fun MainItemView(onClick: (s:String) -> Unit){
             )
         }
     }
+}
 
+@Composable
+fun MainItemViewHori(onClick: (s:String) -> Unit){
+    Column(
+        modifier = Modifier.fillMaxSize()
+            .background(Color(0xFF0D1B2A)).padding(5.dp),
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            modifier = Modifier.padding(top = 50.dp, bottom = 10.dp),
+            text = "무엇을 찾나요?", color = Color.White,
+            fontFamily = GmarketFont(),
+            fontSize = 40.sp
+        )
+        Row(Modifier.fillMaxWidth(), Arrangement.Center,Alignment.CenterVertically,){
+            Column(modifier = Modifier.fillMaxHeight(),
+                verticalArrangement = Arrangement.Center) {
+                MainMenuBox(
+                    Modifier.weight(1f),
+                    0xFF079ad9,
+                    painterResource(Res.drawable.menu1),
+                    "교육",
+                    { onClick("교육") }
+                )
+                MainMenuBox(
+                    Modifier.weight(1f),
+                    0xFF4CAF50,
+                    painterResource(Res.drawable.menu2),
+                    "수사",
+                    { onClick("수사") }
+                )
+            }
+            Column(modifier = Modifier.fillMaxHeight(),
+                verticalArrangement = Arrangement.Center) {
+                MainMenuBox(
+                    Modifier.weight(1f),
+                    0xFFFFC107,
+                    painterResource(Res.drawable.menu3),
+                    "장비숙지",
+                    { onClick("장비숙지") }
+                )
+                MainMenuBox(
+                    Modifier.weight(1f),
+                    0xFF6200EE,
+                    painterResource(Res.drawable.menu4),
+                    "지형지물",
+                    { onClick("지형지물") }
+                )
+            }
+            Column(modifier = Modifier.fillMaxHeight(),
+                verticalArrangement = Arrangement.Center) {
+                MainMenuBox(
+                    Modifier.weight(1f),
+                    0xFFFF4081,
+                    painterResource(Res.drawable.menu5),
+                    "나라배움터",
+                    { onClick("나라배움터") }
+                )
+                MainMenuBox(
+                    Modifier.weight(1f),
+                    0xFF00B1D2,
+                    painterResource(Res.drawable.menu6),
+                    "직무역량평가",
+                    { onClick("직무역량평가") }
+                )
+            }
+        }
+    }
 }
 
 @Composable

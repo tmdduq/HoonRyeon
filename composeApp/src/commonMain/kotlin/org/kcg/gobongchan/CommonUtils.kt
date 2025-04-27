@@ -3,6 +3,7 @@ package org.kcg.gobongchan
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.unit.Dp
 import ggobong.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.DrawableResource
 import kotlin.math.*
