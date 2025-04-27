@@ -1,6 +1,7 @@
 package org.kcg.gobongchan
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -8,10 +9,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.Divider
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -35,7 +38,6 @@ import ggobong.composeapp.generated.resources.GmarketSansTTFLight
 import ggobong.composeapp.generated.resources.GmarketSansTTFMedium
 import ggobong.composeapp.generated.resources.Res
 import org.jetbrains.compose.resources.Font
-import kotlin.random.Random
 
 
 @Composable
@@ -46,7 +48,7 @@ fun GmarketFont() = FontFamily(
 )
 
 @Composable
-fun mainWindowBox(text:String, backgroundColor:Long, onClick:()->Unit, modifier: Modifier = Modifier, textFont: FontFamily){
+fun mainWindowBox(text:String, backgroundColor:Color, onClick:()->Unit, modifier: Modifier = Modifier, textFont: FontFamily){
     val itemModifier = Modifier
         .padding(4.dp)
         .clip(RoundedCornerShape(8.dp))
@@ -55,7 +57,7 @@ fun mainWindowBox(text:String, backgroundColor:Long, onClick:()->Unit, modifier:
         contentAlignment = Alignment.Center,
         modifier = itemModifier.clickable(
             onClick =onClick,
-        ).background(Color(backgroundColor))
+        ).background(backgroundColor)
     ){
         Text(
             modifier = Modifier.wrapContentSize(Alignment.Center).padding(start = 15.dp, end = 15.dp),
@@ -70,38 +72,36 @@ fun mainWindowBox(text:String, backgroundColor:Long, onClick:()->Unit, modifier:
 fun Footer(
     modifier: Modifier = Modifier,
     onCall: () -> Unit,
-    phoneNumber:String
 ) {
     Column(modifier.fillMaxWidth()) {
         //footer 경계선
         Divider(
-            color= Color(0,0,0,192),
-            thickness = 2.dp,
+            color= Color(0,0,0,128),
+            thickness = 1.dp,
             modifier = Modifier.fillMaxWidth()
         )
         Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(8.dp),
+            verticalAlignment = Alignment.Bottom,
         ) {
-            //footer Text
-            Text(
-                text = "더 궁금한게 있으신가요? \n사무실로 전화해보세요!",
-                fontWeight = FontWeight.Bold, fontFamily = GmarketFont()
-            )
-
             Spacer(modifier = Modifier.weight(1f))
-            Button(
-                modifier = Modifier.height(40.dp).width(100.dp),
-                onClick = onCall,
-                colors = ButtonDefaults.buttonColors(Color(10,21,75)),
-                enabled = true,
-            ) {
-                Text(text = "전화", color = Color.White, fontWeight = FontWeight.Bold)
-            }
+
+
+            KakaoShareScreen()
+
+//            Button(
+//                modifier = Modifier.height(40.dp).width(100.dp),
+//                onClick = onCall,
+//                colors = ButtonDefaults.buttonColors(Color(10,21,75)),
+//                enabled = true,
+//            ) {
+//                Text(text = "전화", color = Color.White, fontWeight = FontWeight.Bold)
+//            }
 
         }
     }
 }
+
 
 @OptIn(ExperimentalLayoutApi::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -112,35 +112,54 @@ fun drawMenu(
     color: Long=0xffff9040,
     onClick:(s:String)->Unit){
     AnimatedVisibility(visible) {
+        val screenWidth = LocalWindowInfo.current.containerSize.width / LocalDensity.current.density
+        BoxWithConstraints {
+            val maxWidth = constraints.maxWidth.dp
+            FlowRow(
+                modifier = Modifier.fillMaxWidth().animateContentSize(),
+                maxItemsInEachRow = 3,
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
 
-        FlowRow(
-            modifier = Modifier.fillMaxWidth().animateContentSize(),
-            maxItemsInEachRow = 3,
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            for (s in nameList) {
-                val screenWidth = LocalWindowInfo.current.containerSize.width / LocalDensity.current.density
-                //val borderWidth = if(selectedCategoryName.isNullOrEmpty() || s!=selectedCategoryName) 0.dp else 5.dp
-                val scale by animateFloatAsState(
-                    targetValue = when {
-                        s==selectedCategoryName -> 1.4f
-                        selectedCategoryName.isNullOrEmpty() -> 1f
-                        else -> 0.99f
-                    },
-                    animationSpec = tween(durationMillis = 300),
-                    label = "scaleAnimation"
-                )
-                AnimatedVisibility(scale>=1) {
-                    mainWindowBox(
-                        modifier = Modifier.height((70*scale).dp).wrapContentWidth().widthIn(min = (screenWidth * 0.3f * scale).dp)
-                            .graphicsLayer(scaleX = scale, scaleY = scale),
-                        text = s, textFont = GmarketFont(),
-                        backgroundColor = if(scale!=1.4f) color else 0xffE00030,
-                        onClick = { onClick(s) }
-                    ) //mainBox
-                }
-            } // for
-        } // flowRow
+
+                for (s in nameList.sorted().sortedBy { it.length }) {
+                    val contentsWidth = when{
+                        s.replace(" ","").length <= 5 -> (screenWidth * 0.3f)
+                        s.replace(" ","").length >= 10 -> (screenWidth * 0.9f)
+                        else -> (screenWidth * 0.45f)
+                    }
+                    //val borderWidth = if(selectedCategoryName.isNullOrEmpty() || s!=selectedCategoryName) 0.dp else 5.dp
+                    val scale by animateFloatAsState(
+                        targetValue = when {
+                            s == selectedCategoryName -> 1.4f
+                            selectedCategoryName.isNullOrEmpty() -> 1f
+                            else -> 0.99f
+                        },
+                        animationSpec = tween(durationMillis = 300),
+                    )
+                    val backgroundColor by animateColorAsState(
+                        targetValue = when {
+                            s == selectedCategoryName -> Color(0xffE00030)
+                            selectedCategoryName.isNullOrEmpty() -> Color(color)
+                            else -> Color(color)
+                        },
+                        animationSpec = tween(durationMillis = 300),
+                    )
+                    if(scale>=1) {
+                        AnimatedVisibility(scale >= 1) {
+                            mainWindowBox(
+                                modifier = Modifier.heightIn(min = (70 * scale).dp)
+                                    .widthIn(min = (contentsWidth * scale).dp)
+                                    .graphicsLayer(scaleX = scale, scaleY = scale),
+                                text = s, textFont = GmarketFont(),
+                                backgroundColor = backgroundColor,
+                                onClick = { onClick(s) }
+                            ) //mainBox
+                        }
+                    }
+                } // for
+            } // flowRow
+        }
     } // ani
 }
 
@@ -198,45 +217,6 @@ fun makeDialog(rstMap : MutableMap<String, String?>, onClose:()-> Unit){
 
 
 
-val chats = mutableStateListOf<Chat>(
-    //Chat("교육에 대해 상세히 알려줄게!", getTime(), false),
-)
-
-fun chatsInit(data: Map<String, String>): String{
-    // value.takeIf{Boolean}이란: True- return value // False- return null
-    val title = cNameList.subList(0, LabelSize + 1).asReversed()
-        .firstNotNullOfOrNull { s ->
-            data[s]?.takeIf { it.isNotEmpty() }
-        } ?: ""
-
-    data.filter { it.key !in cNameList.subList(0, LabelSize+1)  }
-        .filter { it.key !in listOf("첨부제목", "첨부내용", "파일명 또는 링크", "위경도")  }
-        .forEach { (k,v) ->
-            if(v.isNotEmpty())
-                chats.add(Chat(k, v, Random.nextBoolean()))
-        }
-
-    if("${data["첨부제목"]}".isNotEmpty()){
-        val fName = data["파일명 또는 링크"] as String
-        val linkData = ChatLinkData(extNameIcon(fName),
-            "${data["첨부제목"]}",
-            "${data["첨부내용"]}",
-            "${data["파일명 또는 링크"]}")
-        chats.add(Chat("참고자료","첨부파일을 확인하세요.", Random.nextBoolean(), linkData))
-    }
-    if("${data["위경도"]}".isNotEmpty()){
-        val yxString = data["위경도"] as String
-        val yxSplit = yxString.split(",")
-        val latSplit = yxSplit[0].trim().split("-")
-        val lonSplit = yxSplit[1].trim().split("-")
-        val lat = latSplit[0].toDouble() + (latSplit[1].toDouble()/60) + (latSplit[2].toDouble()/3600)
-        val lon = lonSplit[0].toDouble() + (lonSplit[1].toDouble()/60) + (lonSplit[2].toDouble()/3600)
-        println("lat $lat, lon $lon")
-        chats.add(Chat("지도위치","$title 여기에요!", Random.nextBoolean(),null, xyData = Pair(lon, lat) ))
-    }
-
-    return title
-}
 
 fun Modifier.bottomBorder(color: Color, thickness: Dp) = this.then(
     Modifier.drawBehind {

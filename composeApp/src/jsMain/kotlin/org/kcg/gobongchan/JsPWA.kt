@@ -88,17 +88,6 @@ private fun showNotification(title: String, message: String, leftIcon:String, ri
     })
 }
 
-
-
-fun ignoreBackKey(){
-    window.history.pushState(null, "", window.location.href)
-    window.onpopstate = {
-        window.history.pushState(null, "", window.location.href)
-        window.location.replace(window.location.href)
-        println("Back navigation is disabled!")
-    }
-}
-
 @Composable
 actual fun InstallButton() {
     var deferredPrompt by remember { mutableStateOf<dynamic>(null) }

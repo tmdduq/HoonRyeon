@@ -15,7 +15,6 @@ const val KCGYellow = 0xFFFECD17
 const val datapath = "composeResources/ggobong.composeapp.generated.resources"
 const val csvName = "files/Gobong.csv"
 const val username = "Mr.고 선생님"
-const val phoneNumber = "063-000-0000"
 
 val LabelSize = 7
 val cNameList = mutableListOf<String>()
@@ -170,3 +169,7 @@ expect fun loadCSV(): State<List<MainData>>
 @Composable
 expect fun WebImage(url:String)
 
+expect fun registerBackHandler(onBack: () -> Unit)
+expect fun pushHistoryState(s:String)
+@Composable
+expect fun KakaoShareScreen()
