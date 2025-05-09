@@ -1,8 +1,13 @@
 package org.kcg.gobongchan
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import ggobong.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.DrawableResource
@@ -164,6 +169,10 @@ expect fun openLinkData(link:String)
 expect fun openUrl(url:String)
 expect fun addPWA()
 @Composable
+expect fun windowWidth() : Dp
+@Composable
+expect fun windowHeight() : Dp
+@Composable
 expect fun InstallButton()
 @Composable
 expect fun loadCSV(): State<List<MainData>>
@@ -174,3 +183,9 @@ expect fun registerBackHandler(onBack: () -> Unit)
 expect fun pushHistoryState(s:String)
 @Composable
 expect fun KakaoShareScreen()
+
+@Composable
+expect fun mapView()
+
+
+expect fun getLastName(mainDataList: List<MainData>, keyword:String): MutableMap<String, MainData>

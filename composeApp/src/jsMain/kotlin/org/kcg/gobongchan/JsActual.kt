@@ -2,15 +2,18 @@ package org.kcg.gobongchan
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
@@ -26,6 +29,9 @@ import kotlinx.browser.window
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.web.css.StyleScope
+import org.jetbrains.compose.web.css.position
+import org.jetbrains.compose.web.dom.Div
 import org.w3c.dom.HTMLDivElement
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.HTMLOrSVGScriptElement
@@ -99,12 +105,44 @@ actual fun loadCSV(): State<List<MainData>> {
     }
 }
 
+actual fun getLastName(mainDataList: List<MainData>, keyword:String): MutableMap<String, MainData> {
+    val rstMap = mutableMapOf<String,MainData>()
+    if(keyword.length<2) return rstMap
+    val keywords = keyword.trim().split(" ")
+
+    for( mainData in mainDataList){
+        val dataMap = mainData.map
+        if( dataMap.values.any{v-> keywords.all{k-> v.contains(k) } } ){
+            val lastName = when{
+                dataMap[cNameList[7]]!!.isNotEmpty() -> dataMap[cNameList[7]]!!
+                dataMap[cNameList[6]]!!.isNotEmpty() -> dataMap[cNameList[6]]!!
+                dataMap[cNameList[5]]!!.isNotEmpty() -> dataMap[cNameList[5]]!!
+                dataMap[cNameList[4]]!!.isNotEmpty() -> dataMap[cNameList[4]]!!
+                dataMap[cNameList[3]]!!.isNotEmpty() -> dataMap[cNameList[3]]!!
+                dataMap[cNameList[2]]!!.isNotEmpty() -> dataMap[cNameList[2]]!!
+                dataMap[cNameList[1]]!!.isNotEmpty() -> dataMap[cNameList[1]]!!
+                else -> "오류"
+            }
+            rstMap[lastName] = mainData
+            println(lastName)
+        }
+    }
+    return rstMap
+}
+
+
+
 actual fun addPWA() {
     window.addEventListener("DOMContentLoaded", {
         console.log("start LaunchedEffect")
         registerServiceWorker{ success -> console.log("start LaunchedEffect: $success") }
     })
 }
+
+@Composable
+actual fun windowWidth()= window.innerWidth.dp
+@Composable
+actual fun windowHeight()= window.innerHeight.dp
 
 @Composable
 actual fun WebImage(url: String) {
@@ -151,7 +189,7 @@ actual fun KakaoShareScreen() {
     LaunchedEffect(key) {
         if(key.isEmpty()) return@LaunchedEffect
         /* <script src="@@@" integrity="@@@" crossOrigin="@@@"> </script> */
-        val script = document.createElement("script") as org.kcg.gobongchan.HTMLScriptElement
+        val script = document.createElement("script") as HTMLScriptElement
         script.src = "https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"
         script.integrity = "sha384-DKYJZ8NLiK8MN4/C5P2dtSmLQ4KwPaoqAfyA/DfmEc1VDxu4yyC7wy6K1Hs90nka"
         script.crossOrigin = "anonymous"
@@ -196,10 +234,15 @@ actual fun KakaoShareScreen() {
     }
 }
 
-@Composable fun test(){
-    val mapDiv = document.createElement("div") as HTMLDivElement
-    mapDiv.id = "map"
-    mapDiv.textContent = "asdkljsdvfa klasdfjlaskd sakdlfj asdlfkj sadlkfjasd flkawjer kl;asdjrklaw34 lkasdfcjakl544k5j asdf9a454kl dsfkjaw4589uasdfkjlasdfj "
-    document.body?.appendChild(mapDiv)
+@Composable
+actual fun mapView(){
+
+        Div(attrs = {
+//            id("map")
+//            style {
+//                property("background","#00f")
+//            }
+
+        })
 
 }

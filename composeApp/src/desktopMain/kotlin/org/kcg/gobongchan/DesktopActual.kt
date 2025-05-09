@@ -1,9 +1,11 @@
 package org.kcg.gobongchan
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -130,6 +132,12 @@ actual fun addPWA() {
     println("addPWA")
 }
 
+@Composable
+actual fun windowWidth() = rememberWindowState().size.width
+@Composable
+actual fun windowHeight() = rememberWindowState().size.height
+
+
 actual fun registerBackHandler(onBack: () -> Unit) {
     // 데스크톱은 브라우저 뒤로가기 개념이 없으므로 아무 작업도 안 함
 }
@@ -163,4 +171,33 @@ actual fun KakaoShareScreen() {
         )
 
     }
+}
+actual fun getLastName(mainDataList: List<MainData>, keyword:String): MutableMap<String, MainData> {
+    val rstMap = mutableMapOf<String,MainData>()
+    if(keyword.length<2) return rstMap
+    val keywords = keyword.trim().split(" ")
+
+    for( mainData in mainDataList){
+        val dataMap = mainData.map
+        if( dataMap.values.any{v-> keywords.all{k-> v.contains(k) } } ){
+            val lastName = when{
+                dataMap[cNameList[7]]!!.isNotEmpty() -> dataMap[cNameList[7]]!!
+                dataMap[cNameList[6]]!!.isNotEmpty() -> dataMap[cNameList[6]]!!
+                dataMap[cNameList[5]]!!.isNotEmpty() -> dataMap[cNameList[5]]!!
+                dataMap[cNameList[4]]!!.isNotEmpty() -> dataMap[cNameList[4]]!!
+                dataMap[cNameList[3]]!!.isNotEmpty() -> dataMap[cNameList[3]]!!
+                dataMap[cNameList[2]]!!.isNotEmpty() -> dataMap[cNameList[2]]!!
+                dataMap[cNameList[1]]!!.isNotEmpty() -> dataMap[cNameList[1]]!!
+                else -> "오류"
+            }
+            rstMap[lastName] = mainData
+            println(lastName)
+        }
+    }
+    return rstMap
+}
+
+@Composable
+actual fun mapView(){
+    Column(Modifier.fillMaxSize().background(Color.Cyan)) {  }
 }

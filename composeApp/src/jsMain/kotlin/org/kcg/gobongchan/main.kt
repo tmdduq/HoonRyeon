@@ -11,17 +11,6 @@ import kotlinx.browser.window
 import org.jetbrains.skiko.wasm.onWasmReady
 import org.w3c.dom.events.Event
 
-
-@OptIn(ExperimentalComposeUiApi::class)
-fun main(){
-    onWasmReady{
-        CanvasBasedWindow{
-            //Greeting().greet()
-            ResponsiveApp()
-        }
-    }
-}
-
 @Composable
 fun ResponsiveApp() {
     val width = remember { mutableStateOf((window.innerWidth)) }
@@ -34,5 +23,17 @@ fun ResponsiveApp() {
         }
         window.addEventListener("resize", listener)
     }
+    println("width: ${width.value}, height: ${height.value}")
     App(Pair(width.value.dp, height.value.dp) )
 }
+
+@OptIn(ExperimentalComposeUiApi::class)
+fun main(){
+    onWasmReady{
+        CanvasBasedWindow{
+            //Greeting().greet()
+            ResponsiveApp()
+        }
+    }
+}
+

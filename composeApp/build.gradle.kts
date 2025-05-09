@@ -29,6 +29,9 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
 
+            //HTML DSL
+            implementation(compose.html.core)
+
             //Image Load
             implementation(libs.coil.compose.core)
             implementation(libs.coil.compose)

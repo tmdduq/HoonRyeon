@@ -17,13 +17,12 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -40,6 +39,8 @@ import kotlinx.coroutines.delay
 import okio.ByteString.Companion.encodeUtf8
 import org.jetbrains.compose.resources.imageResource
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.vectorResource
+import org.jetbrains.skia.Image
 import kotlin.random.Random
 
 val chats = mutableStateListOf<Chat>(
@@ -220,7 +221,7 @@ fun ChatScreen(popupData : MainData, onBack:() -> Unit, ) {
                 verticalAlignment = Alignment.CenterVertically)
             {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    imageVector = vectorResource(Res.drawable.arrow_back),
                     contentDescription = "close Chat"
                 )
                 Text("돌아가기", fontFamily = GmarketFont())
