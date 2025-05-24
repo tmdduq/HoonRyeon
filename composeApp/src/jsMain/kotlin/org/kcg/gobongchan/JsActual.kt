@@ -197,6 +197,7 @@ actual fun KakaoShareScreen() {
             /* Kakao.init('@@@');  */
             val kakao = js("Kakao")
             kakao.init(key)
+            //kakao.init("202c1ec422cbc5a9dfce5f64b5b880ed")
             isSdkLoaded = true
             Unit
         }
@@ -206,9 +207,9 @@ actual fun KakaoShareScreen() {
         horizontalAlignment = Alignment.End,
         modifier = Modifier.clickable {
             if (isSdkLoaded) {
-                /* Kakao.Share.sendCustom( { templateId: 120143 } );*/
                 val kakao = js("Kakao")
                 kakao.Share.sendCustom(js("{ templateId: 120143 }"))
+                //kakao.Channel.chat(js("{ channelPublicId: '_nAttxj' }"))
             }
         }
     ) {

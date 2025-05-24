@@ -92,9 +92,14 @@ private fun showNotification(title: String, message: String, leftIcon:String, ri
 actual fun InstallButton() {
     var deferredPrompt by remember { mutableStateOf<dynamic>(null) }
     val isReady = remember { mutableStateOf(false) }
+    val isNaverApp = remember { mutableStateOf(false) }
 
     // beforeinstallprompt 이벤트 리스너 등록
     DisposableEffect(Unit) {
+        if(window.navigator.userAgent.lowercase().contains("naver")){
+            isNaverApp.value = true
+            isReady.value = true
+        }
         val installEventListener: (Event) -> Unit = { event ->
             event.preventDefault() // 기본 동작 방지
             deferredPrompt = event.asDynamic() // deferredPrompt에 이벤트 저장
@@ -111,6 +116,12 @@ actual fun InstallButton() {
     AnimatedVisibility(isReady.value) {
         Row(Modifier.fillMaxHeight().background(Color(KCGDarkBlue)).clickable {
             isReady.value = false
+            if(isNaverApp.value){
+                window.open(
+                    url="naversearchapp://addshortcut?url=https://osy.kr/compose/login&icon=http://osy.kr/compose/images/icons/kcg-128x128.png&title=부안 교육훈련플랫폼&serviceCode=nstore&version=7",
+                    target = "_blank")
+                return@clickable
+            }
             deferredPrompt?.prompt() // PWA 설치 프롬프트 표시
             try {
                 val userChoice: Promise<Promise<dynamic>> =

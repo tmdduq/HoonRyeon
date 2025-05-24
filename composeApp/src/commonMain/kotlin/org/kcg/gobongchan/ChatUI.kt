@@ -55,12 +55,21 @@ fun chatsInit(data: Map<String, String>): String{
         } ?: ""
 
     data.filter { it.key !in cNameList.subList(0, LabelSize+1)  }
-        .filter { it.key !in listOf("첨부제목", "첨부내용", "파일명 또는 링크", "위경도")  }
+        .filter { it.key !in listOf("관련법령", "관련법령링크", "첨부제목", "첨부내용", "파일명 또는 링크", "위경도")  }
         .forEach { (k,v) ->
             if(v.isNotEmpty())
                 chats.add(Chat(k, v, Random.nextBoolean()))
         }
 
+    if("${data["관련법령"]}".isNotEmpty()){
+        var linkData : ChatLinkData? = null
+        if(data["관련법령링크"] !=null){
+            linkData = ChatLinkData(extNameIcon("law"),
+                "법령정보 바로가기",
+                "법령정보센터로 연결돼요.", data["관련법령링크"]!!)
+        }
+        chats.add(Chat("관련법령","${data["관련법령"]}", Random.nextBoolean(), linkData))
+    }
     if("${data["첨부제목"]}".isNotEmpty()){
         val fName = data["파일명 또는 링크"] as String
         val linkData = ChatLinkData(extNameIcon(fName),
@@ -69,6 +78,7 @@ fun chatsInit(data: Map<String, String>): String{
             "${data["파일명 또는 링크"]}")
         chats.add(Chat("참고자료","첨부파일을 확인해보세요.", Random.nextBoolean(), linkData))
     }
+
     if("${data["위경도"]}".isNotEmpty()){
         val yxString = data["위경도"] as String
         val yxSplit = yxString.split(",")
@@ -79,6 +89,8 @@ fun chatsInit(data: Map<String, String>): String{
         println("lat $lat, lon $lon")
         chats.add(Chat("지도위치","$title 여기에요!", Random.nextBoolean(),null, xyData = Pair(lon, lat) ))
     }
+
+    chats.add(Chat("!QnA","부족한가요?\n여기를 눌러서 더 물어볼 수 있어요.",Random.nextBoolean(), null, null))
 
     return title
 }
@@ -221,7 +233,7 @@ fun ChatScreen(popupData : MainData, onBack:() -> Unit, ) {
                 verticalAlignment = Alignment.CenterVertically)
             {
                 Icon(
-                    imageVector = vectorResource(Res.drawable.arrow_back),
+                    painter = painterResource(Res.drawable.arrow_back),
                     contentDescription = "close Chat"
                 )
                 Text("돌아가기", fontFamily = GmarketFont())
@@ -241,6 +253,10 @@ fun ChatItemView(
     val layoutDirection =
         if(isOut) LocalLayoutDirection provides LayoutDirection.Rtl
         else LocalLayoutDirection provides LayoutDirection.Ltr
+    val linkModifier = when{
+        subtitle.startsWith("!QnA") -> Modifier.clickable{ openLinkData("https://pf.kakao.com/_laKin") }
+        else -> Modifier
+    }
     CompositionLocalProvider(layoutDirection) {
         Column(Modifier.fillMaxWidth().wrapContentHeight().widthIn(min=100.dp)) {
 
@@ -268,7 +284,10 @@ fun ChatItemView(
                             ).padding(8.dp)
                         ) {
                             Text(
-                                subtitle,
+                                text = when{
+                                        subtitle.startsWith("!QnA") -> "QnA"
+                                        else -> subtitle
+                                    },
                                 textAlign = TextAlign.Center, fontWeight = FontWeight.Bold,
                                 color = Color.White, fontFamily = GmarketFont(),
                                 style = LocalTextStyle.current.copy(textDirection = TextDirection.Ltr)
@@ -281,13 +300,15 @@ fun ChatItemView(
                             .padding(top=12.dp).padding(start=3.dp, end=3.dp).fillMaxHeight() .wrapContentWidth()
                             .background(Color.White, shape = RoundedCornerShape(topStart = 0.dp, topEnd = 16.dp, bottomEnd = 16.dp, bottomStart = 16.dp))
                             .border( width = 1.dp,color = Color.Black, shape = RoundedCornerShape(topStart = 0.dp, topEnd = 16.dp, bottomEnd = 16.dp, bottomStart = 16.dp))
-                            .padding(8.dp),
+                            .padding(8.dp).then(linkModifier),
                         contentAlignment = Alignment.Center
 
                     ) {
                         Column(Modifier.width(IntrinsicSize.Max)) {
                             Text(
-                                detail,
+                                text = when{
+                                        else -> detail
+                                    },
                                 textAlign = TextAlign.Center, fontFamily = GmarketFont(),
                                 style = LocalTextStyle.current.copy(textDirection = TextDirection.Ltr)
                             )

@@ -65,6 +65,7 @@ fun extNameIcon(fName:String) = when {
     fName.endsWith("hwp") -> Res.drawable.docs_64dp
     fName.endsWith("hwpx") -> Res.drawable.docs_64dp
     fName.endsWith("xls") -> Res.drawable.docs_64dp
+    fName.endsWith("law") -> Res.drawable.law_48dp
     else -> Res.drawable.link_64dp
 }
 
