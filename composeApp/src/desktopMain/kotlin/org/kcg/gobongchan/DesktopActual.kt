@@ -1,12 +1,10 @@
 package org.kcg.gobongchan
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,12 +19,14 @@ import com.github.doyaaaaaken.kotlincsv.client.CsvReader
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import ggobong.composeapp.generated.resources.Res
 import ggobong.composeapp.generated.resources.app_footer_text
+import ggobong.composeapp.generated.resources.kcg_128x128
 import ggobong.composeapp.generated.resources.police
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.decodeToImageBitmap
 import org.jetbrains.compose.resources.painterResource
+import org.w3c.dom.events.Event
 import java.awt.Desktop
 import java.io.File
 import java.io.InputStream
@@ -44,9 +44,33 @@ actual fun getTime() : String{
 }
 
 @Composable
-actual fun InstallButton(){
-    println("InstallButton")
+actual fun InstallButton() {
+    val isReady = remember { mutableStateOf(true) }
+    val isNaverApp = remember { mutableStateOf(false) }
+
+
+    AnimatedVisibility(isReady.value) {
+        Row(Modifier.fillMaxHeight().background(Color(KCGDarkBlue)).clickable {
+            isReady.value = false
+        }) {
+            Image(
+                painter = painterResource(Res.drawable.kcg_128x128),
+                contentDescription = "App install",
+                modifier = Modifier.size(20.dp).padding(start = 5.dp).align(Alignment.CenterVertically)
+            )
+            Text("App 설치", fontFamily = GmarketFont(), fontSize = 15.sp, color = Color.White,
+                modifier= Modifier.align(Alignment.CenterVertically).padding(end = 5.dp))
+        }
+    }
 }
+
+@Composable
+actual fun hitCountView(modifier: Modifier) {
+    Text(
+        "today 00, total 000",
+        modifier = Modifier.fillMaxWidth().then(modifier).padding(start = 5.dp))
+}
+
 actual fun println(s:String) {
     kotlin.io.println(s)
 }

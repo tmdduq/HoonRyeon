@@ -55,21 +55,36 @@ fun chatsInit(data: Map<String, String>): String{
         } ?: ""
 
     data.filter { it.key !in cNameList.subList(0, LabelSize+1)  }
-        .filter { it.key !in listOf("관련법령", "관련법령링크", "첨부제목", "첨부내용", "파일명 또는 링크", "위경도")  }
+        .filter { it.key !in listOf("첨부제목", "첨부내용", "파일명 또는 링크", "위경도", "추가코드", "추가링크")  }
         .forEach { (k,v) ->
             if(v.isNotEmpty())
                 chats.add(Chat(k, v, Random.nextBoolean()))
         }
 
-    if("${data["관련법령"]}".isNotEmpty()){
-        var linkData : ChatLinkData? = null
-        if(data["관련법령링크"] !=null){
-            linkData = ChatLinkData(extNameIcon("law"),
-                "법령정보 바로가기",
-                "법령정보센터로 연결돼요.", data["관련법령링크"]!!)
+    if("${data["추가코드"]}".isNotEmpty()){
+        if (data["추가링크"] != null) {
+            var linkData: ChatLinkData? = null
+            when ("${data["추가코드"]}") {
+                "law" -> {
+                    linkData = ChatLinkData(
+                        extNameIcon("law"),
+                        "법령정보 바로가기",
+                        "법령정보센터로 연결돼요.", data["추가링크"]!!
+                    )
+                    chats.add(Chat("관련법령", "${data["관련법령"]}", Random.nextBoolean(), linkData))
+                }
+                "manual" -> {
+                    linkData = ChatLinkData(
+                        extNameIcon("manual"),
+                        "매뉴얼 바로가기",
+                        "교육훈련교범으로 연결돼요.", data["추가링크"]!!
+                    )
+                    chats.add(Chat("매뉴얼", "훈련교범을 참고하세요!", Random.nextBoolean(), linkData))
+                }
+            }
         }
-        chats.add(Chat("관련법령","${data["관련법령"]}", Random.nextBoolean(), linkData))
     }
+
     if("${data["첨부제목"]}".isNotEmpty()){
         val fName = data["파일명 또는 링크"] as String
         val linkData = ChatLinkData(extNameIcon(fName),

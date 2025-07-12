@@ -66,6 +66,7 @@ fun extNameIcon(fName:String) = when {
     fName.endsWith("hwpx") -> Res.drawable.docs_64dp
     fName.endsWith("xls") -> Res.drawable.docs_64dp
     fName.endsWith("law") -> Res.drawable.law_48dp
+    fName.endsWith("manual") -> Res.drawable.manual_64dp
     else -> Res.drawable.link_64dp
 }
 
@@ -175,6 +176,8 @@ expect fun windowWidth() : Dp
 expect fun windowHeight() : Dp
 @Composable
 expect fun InstallButton()
+@Composable
+expect fun hitCountView(modifier: Modifier = Modifier)
 @Composable
 expect fun loadCSV(): State<List<MainData>>
 @Composable

@@ -191,6 +191,7 @@ fun App(windowSize :  Pair<Dp, Dp>) {
                 modifier = Modifier.fillMaxWidth(1f).height(40.dp),
                 contentAlignment = Alignment.CenterEnd) {
                 InstallButton()
+                //hitCountView(Modifier.align(Alignment.CenterStart))
             }
             //메인화면
             AnimatedVisibility(categoryVerticalDepth.value<1 && searchString.value.isEmpty(),
@@ -370,8 +371,8 @@ fun MainItemView(onClick: (s:String) -> Unit, onValueChange:(s:String)->Unit){
                 Modifier.weight(1f),
                 0xFFFF4081,
                 painterResource(Res.drawable.menu5),
-                "나라배움터",
-                { onClick("나라배움터") }
+                "해상종합훈련",
+                { onClick("해상종합훈련") }
             )
             MainMenuBox(
                 Modifier.weight(1f),
@@ -445,8 +446,8 @@ fun MainItemViewHori(onClick: (s:String) -> Unit){
                     Modifier.weight(1f),
                     0xFFFF4081,
                     painterResource(Res.drawable.menu5),
-                    "나라배움터",
-                    { onClick("나라배움터") }
+                    "해상종합훈련",
+                    { onClick("해상종합훈련") }
                 )
                 MainMenuBox(
                     Modifier.weight(1f),

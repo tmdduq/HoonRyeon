@@ -26,6 +26,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import kotlinx.browser.document
 import kotlinx.browser.window
+import kotlinx.coroutines.await
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -129,8 +130,33 @@ actual fun getLastName(mainDataList: List<MainData>, keyword:String): MutableMap
     }
     return rstMap
 }
+@Composable
+actual fun hitCountView(modifier: Modifier) {
+    val hit = remember { mutableStateOf(0) }
+    val hitTotal = remember { mutableStateOf(0) }
 
-
+    LaunchedEffect(Unit) {
+        val url = "totalIncrementView"
+        try {
+            val response = window.fetch(url).await()
+            if (response.ok) {
+                val json = response.json().await().asDynamic()
+                hit.value = json.views as Int
+                hitTotal.value = json.totalViews as Int
+            } else {
+                console.error("hitCount Failed to fetch: ${response.status}")
+            }
+        } catch (e: Throwable) {
+            console.error("hitCount Exception: ${e.message}")
+        }
+    }
+    AnimatedVisibility(hitTotal.value>0) {
+        Text(
+            "today ${hit.value}, total ${hitTotal.value}",
+            modifier = Modifier.fillMaxWidth().then(modifier).padding(start = 5.dp)
+        )
+    }
+}
 
 actual fun addPWA() {
     window.addEventListener("DOMContentLoaded", {
